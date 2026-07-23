@@ -13,9 +13,16 @@ class TicketSeeder extends Seeder
     public function run(): void
     {
         $requesterNames = [
-            'Budi Santoso', 'Siti Rahayu', 'Ahmad Wijaya', 'Dewi Lestari',
-            'Rizky Pratama', 'Anisa Putri', 'Hendra Gunawan', 'Rina Marlina',
-            'Fajar Nugroho', 'Mega Sari',
+            'Budi Santoso',
+            'Siti Rahayu',
+            'Ahmad Wijaya',
+            'Dewi Lestari',
+            'Rizky Pratama',
+            'Anisa Putri',
+            'Hendra Gunawan',
+            'Rina Marlina',
+            'Fajar Nugroho',
+            'Mega Sari',
         ];
 
         $tickets = [
@@ -32,7 +39,7 @@ class TicketSeeder extends Seeder
             [
                 'subject' => 'Fitur export data tidak berfungsi',
                 'description' => 'Ketika saya klik tombol export CSV di halaman laporan, file yang terdownload kosong. Sudah dicoba di Chrome dan Firefox, hasilnya sama saja.',
-                'status' => 'in_progres',
+                'status' => 'in_progress',
             ],
             [
                 'subject' => 'Request perubahan email akun',
@@ -47,7 +54,7 @@ class TicketSeeder extends Seeder
             [
                 'subject' => 'Notifikasi email tidak terkirim',
                 'description' => 'Saya tidak menerima notifikasi email sejak 3 hari lalu. Sudah cek folder spam dan tidak ada. Notifikasi di aplikasi tetap muncul normal.',
-                'status' => 'in_progres',
+                'status' => 'in_progress',
             ],
             [
                 'subject' => 'Halaman lambat saat buka laporan',
@@ -67,7 +74,7 @@ class TicketSeeder extends Seeder
             [
                 'subject' => 'Data duplikat di tabel pengguna',
                 'description' => 'Saya menemukan ada data pengguna yang duplikat di daftar pengguna. User dengan nama "Test User" muncul 3 kali dengan email yang berbeda-beda.',
-                'status' => 'in_progres',
+                'status' => 'in_progress',
             ],
             [
                 'subject' => 'Tampilan mobile tidak responsif',
@@ -87,7 +94,7 @@ class TicketSeeder extends Seeder
             [
                 'subject' => 'Masalah dengan pencarian data',
                 'description' => 'Fitur search di halaman daftar produk tidak mengembalikan hasil yang tepat. Ketika saya cari "laptop", hasilnya malah menampilkan semua produk elektronik.',
-                'status' => 'in_progres',
+                'status' => 'in_progress',
             ],
             [
                 'subject' => 'Akun terkunci setelah 3 kali salah password',
@@ -107,7 +114,7 @@ class TicketSeeder extends Seeder
             [
                 'subject' => 'Sertifikat SSL expired',
                 'description' => 'Browser menampilkan peringatan bahwa sertifikat SSL website sudah expired. Pengunjung tidak bisa mengakses website karena warning ini.',
-                'status' => 'in_progres',
+                'status' => 'in_progress',
             ],
             [
                 'subject' => 'Backup database gagal',
@@ -127,7 +134,7 @@ class TicketSeeder extends Seeder
 
             Ticket::create([
                 'requester_name' => $name,
-                'reqeuster_email' => $email,
+                'requester_email' => $email,
                 'subject' => $ticket['subject'],
                 'description' => $ticket['description'],
                 'status' => $ticket['status'],

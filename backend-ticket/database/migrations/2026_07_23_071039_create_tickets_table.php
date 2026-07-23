@@ -14,10 +14,10 @@ return new class extends Migration
         Schema::create('tickets', function (Blueprint $table) {
             $table->id();
             $table->string('requester_name', 255);
-            $table->string('reqeuster_email', 255);
+            $table->string('requester_email', 255);
             $table->string('subject', 255);
             $table->text('description');
-            $table->enum('status', ['open', 'in_progres', 'resolved'])->default('open')->index();
+            $table->enum('status', ['open', 'in_progress', 'resolved'])->default('open')->index();
 
             $table->timestamps();
         });
