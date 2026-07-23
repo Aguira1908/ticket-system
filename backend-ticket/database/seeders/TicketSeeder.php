@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Ticket;
-use App\Models\User;
 use Illuminate\Database\Seeder;
 
 class TicketSeeder extends Seeder
@@ -13,7 +12,11 @@ class TicketSeeder extends Seeder
      */
     public function run(): void
     {
-        $users = User::where('role', 'user')->pluck('id')->toArray();
+        $requesterNames = [
+            'Budi Santoso', 'Siti Rahayu', 'Ahmad Wijaya', 'Dewi Lestari',
+            'Rizky Pratama', 'Anisa Putri', 'Hendra Gunawan', 'Rina Marlina',
+            'Fajar Nugroho', 'Mega Sari',
+        ];
 
         $tickets = [
             [
@@ -34,7 +37,7 @@ class TicketSeeder extends Seeder
             [
                 'subject' => 'Request perubahan email akun',
                 'description' => 'Saya ingin mengubah email akun saya dari budi@lama.com ke budi@baru.com. Mohon bantuannya karena di pengaturan tidak ada opsi untuk mengubah email.',
-                'status' => 'closed',
+                'status' => 'resolved',
             ],
             [
                 'subject' => 'Bug pada halaman dashboard',
@@ -54,12 +57,12 @@ class TicketSeeder extends Seeder
             [
                 'subject' => 'Error 500 saat upload file',
                 'description' => 'Setiap kali saya mencoba upload file PDF berukuran lebih dari 5MB, muncul error 500 Internal Server Error. File yang lebih kecil bisa diupload tanpa masalah.',
-                'status' => 'closed',
+                'status' => 'resolved',
             ],
             [
                 'subject' => 'Permintaan reset password',
                 'description' => 'Saya lupa password akun saya dan link reset password yang dikirim ke email sudah expired. Mohon dikirim ulang link reset password.',
-                'status' => 'closed',
+                'status' => 'resolved',
             ],
             [
                 'subject' => 'Data duplikat di tabel pengguna',
@@ -89,7 +92,7 @@ class TicketSeeder extends Seeder
             [
                 'subject' => 'Akun terkunci setelah 3 kali salah password',
                 'description' => 'Akun saya terkunci karena 3 kali salah memasukkan password. Saya sudah menunggu 30 menit tapi masih belum bisa login kembali.',
-                'status' => 'closed',
+                'status' => 'resolved',
             ],
             [
                 'subject' => 'Format tanggal salah di laporan',
@@ -114,13 +117,17 @@ class TicketSeeder extends Seeder
             [
                 'subject' => 'Hak akses user tidak sesuai',
                 'description' => 'User dengan role "viewer" bisa mengakses menu edit dan delete. Seharusnya role viewer hanya bisa melihat data tanpa bisa melakukan perubahan.',
-                'status' => 'closed',
+                'status' => 'resolved',
             ],
         ];
 
-        foreach ($tickets as $index => $ticket) {
+        foreach ($tickets as $ticket) {
+            $name = $requesterNames[array_rand($requesterNames)];
+            $email = strtolower(str_replace(' ', '.', $name)).rand(1, 99).'@gmail.com';
+
             Ticket::create([
-                'user_id' => $users[$index % count($users)],
+                'requester_name' => $name,
+                'reqeuster_email' => $email,
                 'subject' => $ticket['subject'],
                 'description' => $ticket['description'],
                 'status' => $ticket['status'],
