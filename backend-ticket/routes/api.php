@@ -9,7 +9,7 @@ Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5.
 
 Route::get('/tickets', [TicketController::class, 'index']);
 Route::post('/tickets', [TicketController::class, 'store']);
-Route::get('/tickets/{id}', [TicketController::class, 'show']);
+Route::get('/tickets/{ticket}', [TicketController::class, 'show']);
 
 // Admin routes (auth required)
 Route::middleware('auth:sanctum')->group(function () {
