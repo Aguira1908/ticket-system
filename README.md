@@ -1,177 +1,136 @@
-# 🎫 Support Ticket System
+# 🎫 Sistem Tiket Support
 
-A full-stack support ticket application where users can create and track support tickets, and administrators can manage ticket statuses and provide responses.
+Aplikasi full-stack untuk membuat dan mengelola tiket support. User bisa membuat tiket, admin bisa mengubah status dan membalas tiket.
 
-**Built as a Full-Stack Developer Technical Assessment.**
+**Dibuat sebagai Technical Assessment Full-Stack Developer.**
 
 ---
 
-## Table of Contents
+## Daftar Isi
 
 - [Tech Stack](#tech-stack)
-- [Architecture](#architecture)
-- [Features](#features)
-- [Setup Instructions](#setup-instructions)
-- [Environment Variables](#environment-variables)
-- [Database Migration & Seeding](#database-migration--seeding)
-- [Running the Application](#running-the-application)
-- [Running Tests](#running-tests)
+- [Fitur](#fitur)
+- [Cara Setup](#cara-setup)
+- [Menjalankan Aplikasi](#menjalankan-aplikasi)
+- [Akun Default](#akun-default)
+- [Database](#database)
 - [API Documentation](#api-documentation)
-- [Second Backend Technology](#second-backend-technology)
-- [Project Structure](#project-structure)
-- [Known Limitations](#known-limitations)
-- [Future Improvements](#future-improvements)
-- [Estimated Time Spent](#estimated-time-spent)
+- [Second Backend (Node.js)](#second-backend-nodejs)
+- [Struktur Proyek](#struktur-proyek)
+- [Keterbatasan](#keterbatasan)
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology |
+| Layer | Teknologi |
 |-------|-----------|
-| **Backend (Main)** | PHP 8.3 · Laravel 13 |
+| **Backend Utama** | PHP 8.3 · Laravel 13 |
 | **Frontend** | React 19 · TypeScript · Inertia.js · Tailwind CSS 4 |
-| **Authentication** | Laravel Sanctum (API Token) |
+| **Autentikasi** | Laravel Sanctum (API Token) |
 | **Database** | SQLite (development) / PostgreSQL (production via Docker) |
 | **Build Tool** | Vite 8 |
 | **Testing** | Pest PHP 4 |
-| **Second Backend** | Node.js with TypeScript |
+| **Backend Kedua** | Node.js · Express 5 · TypeScript |
 
 ---
 
-## Architecture
+## Fitur
 
-```
-┌──────────────────────────────────────────────────────────┐
-│                     Client (Browser)                      │
-│              React 19 + TypeScript + Inertia.js           │
-│              Tailwind CSS 4 · Vite HMR                    │
-└───────────────────────┬──────────────────────────────────┘
-                        │ Inertia Protocol / fetch()
-                        ▼
-┌──────────────────────────────────────────────────────────┐
-│                 Laravel 13 Backend (PHP 8.3)              │
-│                                                          │
-│  Routes                                                  │
-│  ├── web.php     → Inertia pages (/)                     │
-│  └── api.php     → REST API (/api/*)                     │
-│                                                          │
-│  Controllers                                             │
-│  ├── Api\TicketController   → CRUD + Status + Responses  │
-│  ├── Api\AuthController     → Login / Logout (Sanctum)   │
-│  └── Api\UserController     → User info                  │
-│                                                          │
-│  Models                                                  │
-│  ├── Ticket           → hasMany(TicketResponse)          │
-│  ├── TicketResponse   → belongsTo(Ticket, User)          │
-│  └── User             → HasApiTokens (Sanctum)           │
-│                                                          │
-│  Middleware                                               │
-│  ├── auth:sanctum     → Admin route protection           │
-│  └── throttle:5,1     → Login rate limiting              │
-└───────────────────────┬──────────────────────────────────┘
-                        │ Eloquent ORM
-                        ▼
-               ┌─────────────────┐
-               │  SQLite / PGSQL │
-               └─────────────────┘
-```
+### 👤 User
+- Lihat daftar tiket (paginasi, 15 per halaman)
+- Buat tiket baru (nama, email, subjek, deskripsi)
+- Lihat detail tiket beserta balasan admin
+- Status tiket ditampilkan dengan indikator visual (Open / In Progress / Resolved)
+- Validasi form di sisi client
 
-### Design Decisions
+### 🔐 Admin
+- Login dengan email/password (Sanctum token auth)
+- Ubah status tiket (Open ↔ In Progress ↔ Resolved)
+- Balas tiket
+- Filter tiket berdasarkan status
+- Logout (revoke token)
 
-- **Inertia.js + React**: Combines the routing power of Laravel with the interactivity of React SPA. No need for a separate frontend build server or CORS configuration — Inertia acts as the glue.
-- **Laravel Sanctum**: Lightweight token-based auth ideal for SPA + API use cases. Chosen over Passport since OAuth complexity is unnecessary here.
-- **SQLite (development)**: Zero-configuration database for quick local setup. PostgreSQL is available via Docker Compose for production-like environments.
-- **Database enum for status**: Used a database-level `enum('open', 'in_progress', 'resolved')` column with an index for data integrity and query performance.
-- **Tailwind CSS 4**: Utility-first CSS framework for rapid, responsive UI development with the new Vite plugin integration.
+### 🛠 Teknis
+- RESTful API dengan HTTP status code yang benar
+- Validasi input di server
+- Loading & error states
+- Layout responsif (Tailwind CSS)
+- Migrasi database dengan relasi
+- Data sample (20 tiket, 3 user)
+- Rate limiting pada endpoint login (5 percobaan/menit)
+- Automated test dengan Pest PHP
 
 ---
 
-## Features
+## Cara Setup
 
-### 👤 User Features
-- ✅ View a list of all tickets (paginated, 15 per page)
-- ✅ Create a new ticket (name, email, subject, description)
-- ✅ View ticket details with admin responses
-- ✅ Display ticket status with visual indicators (Open / In Progress / Resolved)
-- ✅ Client-side form validation with error messages
-
-### 🔐 Admin Features
-- ✅ Login with email/password (Sanctum token auth)
-- ✅ Update ticket status (Open ↔ In Progress ↔ Resolved)
-- ✅ Add responses to tickets (linked to authenticated user)
-- ✅ Filter tickets by status
-- ✅ Logout (token revocation)
-
-### 🛠 Technical Features
-- ✅ RESTful API with proper HTTP status codes (200, 201, 401, 404, 422)
-- ✅ Server-side input validation
-- ✅ Loading and error states
-- ✅ Responsive layout (Tailwind CSS)
-- ✅ Database migrations with proper relationships
-- ✅ Sample seed data (20 tickets, 3 users)
-- ✅ Rate limiting on login endpoint (5 attempts/minute)
-- ✅ Automated tests with Pest PHP
-
----
-
-## Setup Instructions
-
-### Prerequisites
+### Prasyarat
 
 - **PHP** >= 8.3
 - **Composer** >= 2.x
 - **Node.js** >= 18.x
 - **npm** >= 9.x
-- **SQLite** (default, pre-installed on most systems) or **PostgreSQL** 15+
-- **Docker & Docker Compose** (optional, for PostgreSQL)
+- **Docker & Docker Compose** (opsional, untuk PostgreSQL)
 
-### 1. Clone the Repository
+### 1. Clone Repository
 
 ```bash
 git clone https://github.com/Aguira1908/ticket-system.git
 cd ticket-system
 ```
 
-### 2. Install Root Dependencies
+### 2. Install Dependencies Root
 
 ```bash
 npm install
 ```
 
-### 3. Setup the Laravel Backend
+### 3. Setup Backend Laravel
 
 ```bash
 cd backend-ticket
 
-# Install PHP dependencies
 composer install
-
-# Copy environment file
 cp .env.example .env
-
-# Generate application key
 php artisan key:generate
-
-# Install frontend dependencies
 npm install
 ```
 
-### 4. (Optional) Start PostgreSQL with Docker
-
-If you prefer PostgreSQL over SQLite:
+### 4. Setup Database
 
 ```bash
-# From the root directory
-cd ..
+cd backend-ticket
 
-# Update root .env with your desired password
-# DB_PASSWORD=your_secure_password
+# Buat tabel
+php artisan migrate
 
+# Isi data sample
+php artisan db:seed
+```
+
+Atau reset sekaligus isi ulang:
+
+```bash
+php artisan migrate:fresh --seed
+```
+
+### 5. Setup Second Backend (Node.js)
+
+```bash
+cd second-backend-node
+npm install
+```
+
+### 6. (Opsional) PostgreSQL via Docker
+
+```bash
+# Dari root directory
 docker compose up -d
 ```
 
-Then update `backend-ticket/.env`:
+Lalu update `backend-ticket/.env`:
+
 ```env
 DB_CONNECTION=pgsql
 DB_HOST=127.0.0.1
@@ -183,123 +142,22 @@ DB_PASSWORD=your_secure_password
 
 ---
 
-## Environment Variables
+## Menjalankan Aplikasi
 
-### Root `.env`
+### Jalankan Semua Sekaligus
 
-Used by Docker Compose for PostgreSQL:
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `DB_CONNECTION` | Database driver | `pgsql` |
-| `DB_HOST` | Database host | `127.0.0.1` |
-| `DB_PORT` | Database port | `5432` |
-| `DB_DATABASE` | Database name | `ticket_system_db` |
-| `DB_USERNAME` | Database username | `postgres` |
-| `DB_PASSWORD` | Database password | *(set your own)* |
-
-### Backend `backend-ticket/.env`
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `APP_NAME` | Application name | `Laravel` |
-| `APP_ENV` | Environment | `local` |
-| `APP_DEBUG` | Debug mode | `true` |
-| `APP_KEY` | App encryption key | *(auto-generated)* |
-| `APP_URL` | Application URL | `http://localhost:8000` |
-| `DB_CONNECTION` | Database driver | `sqlite` |
-
-> ⚠️ **Important**: Never commit the `.env` file with real credentials. Use `.env.example` as a template.
-
----
-
-## Database Migration & Seeding
-
-### Run Migrations
-
-```bash
-cd backend-ticket
-
-# Create all tables
-php artisan migrate
-```
-
-### Seed Sample Data
-
-```bash
-# Seed the database with sample users, tickets, and responses
-php artisan db:seed
-```
-
-This creates:
-
-| Seeder | Data |
-|--------|------|
-| `UserSeeder` | 3 users: Admin User (`admin@gmail.com`), Support Agent (`support@gmail.com`), Budi Santoso (`budi@gmail.com`) — all with password: `password` |
-| `TicketSeeder` | 20 realistic support tickets in Indonesian with varying statuses and priorities |
-| `TicketResponseSeeder` | Admin/agent responses on tickets, with follow-ups on in-progress and resolved tickets |
-
-### Fresh Migration + Seed (Reset Everything)
-
-```bash
-php artisan migrate:fresh --seed
-```
-
-### Database Schema
-
-#### `tickets`
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | bigint (PK) | Auto-incrementing ID |
-| `requester_name` | string(255) | Name of the ticket submitter |
-| `requester_email` | string(255) | Email of the ticket submitter |
-| `subject` | string(255) | Ticket subject line |
-| `description` | text | Detailed description of the issue |
-| `status` | enum | `open` \| `in_progress` \| `resolved` (default: `open`, indexed) |
-| `created_at` | timestamp | Creation timestamp |
-| `updated_at` | timestamp | Last update timestamp |
-
-#### `ticket_responses`
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | bigint (PK) | Auto-incrementing ID |
-| `ticket_id` | bigint (FK) | References `tickets.id` (cascade delete) |
-| `user_id` | bigint (FK) | References `users.id` (cascade delete) |
-| `message` | text | Response content |
-| `created_at` | timestamp | Creation timestamp |
-| `updated_at` | timestamp | Last update timestamp |
-
-#### Entity Relationships
-
-```
-User (admin/agent)
-  │
-  │ hasMany (via personal_access_tokens)
-  │
-  └── TicketResponse
-        │ belongsTo
-        ▼
-      Ticket ──── hasMany ──── TicketResponse
-```
-
----
-
-## Running the Application
-
-### Quick Start (All Services)
-
-From the root directory:
+Dari root directory:
 
 ```bash
 npm run dev
 ```
 
-This uses `concurrently` to start:
+Perintah ini menjalankan 3 service bersamaan menggunakan `concurrently`:
 - 🔵 Laravel backend (`php artisan serve`)
-- 🟣 Vite frontend dev server (`npm run dev`)
+- 🟣 Vite dev server (`npm run dev`)
 - 🟡 Node.js second backend (`npm run dev`)
 
-### Run Individually
+### Jalankan Satu Per Satu
 
 **Laravel Backend:**
 ```bash
@@ -308,148 +166,113 @@ php artisan serve
 # → http://localhost:8000
 ```
 
-**Vite Dev Server (separate terminal):**
+**Vite Dev Server (terminal terpisah):**
 ```bash
 cd backend-ticket
 npm run dev
-# → Vite HMR on http://localhost:5173 (proxied through Laravel)
 ```
 
-### Access Points
+**Node.js Second Backend:**
+```bash
+cd second-backend-node
+npm run dev
+# → http://localhost:4000
+```
+
+### URL Akses
 
 | Service | URL |
 |---------|-----|
-| Main Application | [http://localhost:8000](http://localhost:8000) |
-| API Base URL | [http://localhost:8000/api](http://localhost:8000/api) |
+| Aplikasi Utama | http://localhost:8000 |
+| API Utama | http://localhost:8000/api |
+| API Statistik (Node.js) | http://localhost:4000/api/stats |
 
-### Default Login Credentials
+---
 
-| Account | Email | Password |
-|---------|-------|----------|
+## Akun Default
+
+| Akun | Email | Password |
+|------|-------|----------|
 | Admin | `admin@gmail.com` | `password` |
 | Support Agent | `support@gmail.com` | `password` |
 | Budi Santoso | `budi@gmail.com` | `password` |
 
 ---
 
-## Running Tests
+## Database
 
-### Run All Tests
+### Skema Tabel
 
-```bash
-cd backend-ticket
-php artisan test
-```
+#### `tickets`
+| Kolom | Tipe | Keterangan |
+|-------|------|------------|
+| `id` | bigint (PK) | Auto-increment |
+| `requester_name` | string(255) | Nama pengirim tiket |
+| `requester_email` | string(255) | Email pengirim tiket |
+| `subject` | string(255) | Subjek tiket |
+| `description` | text | Deskripsi masalah |
+| `status` | enum | `open` \| `in_progress` \| `resolved` (default: `open`) |
+| `created_at` | timestamp | Waktu dibuat |
+| `updated_at` | timestamp | Waktu diperbarui |
 
-Or using Pest directly:
-
-```bash
-cd backend-ticket
-./vendor/bin/pest
-```
-
-### Test Configuration
-
-Tests run against **in-memory SQLite** for speed and isolation (configured in `phpunit.xml`):
-
-```xml
-<env name="DB_CONNECTION" value="sqlite"/>
-<env name="DB_DATABASE" value=":memory:"/>
-```
-
-### Test Suite
-
-| Type | File | Description |
-|------|------|-------------|
-| Feature Test | `tests/Feature/ExampleTest.php` | Verifies homepage route returns 200 OK |
-| Unit Test | `tests/Unit/ExampleTest.php` | Basic assertion sanity check |
-| Configuration | `tests/Pest.php` | Pest setup with `RefreshDatabase` trait and helper functions |
+#### `ticket_responses`
+| Kolom | Tipe | Keterangan |
+|-------|------|------------|
+| `id` | bigint (PK) | Auto-increment |
+| `ticket_id` | bigint (FK) | Referensi ke `tickets.id` (cascade delete) |
+| `user_id` | bigint (FK) | Referensi ke `users.id` (cascade delete) |
+| `message` | text | Isi balasan |
+| `created_at` | timestamp | Waktu dibuat |
+| `updated_at` | timestamp | Waktu diperbarui |
 
 ---
 
 ## API Documentation
 
-### Public Endpoints (No Authentication Required)
+### Endpoint Publik (Tanpa Autentikasi)
 
----
+#### `POST /api/tickets` — Buat Tiket Baru
 
-#### `POST /api/tickets` — Create a New Ticket
-
-**Request Body:**
 ```json
 {
   "requester_name": "John Doe",
   "requester_email": "john@example.com",
-  "subject": "Cannot access my account",
-  "description": "I've been locked out since yesterday morning..."
+  "subject": "Tidak bisa akses akun",
+  "description": "Akun saya terkunci sejak kemarin pagi..."
 }
 ```
 
-**Validation Rules:**
+| Field | Validasi |
+|-------|----------|
+| `requester_name` | wajib, string, max:255 |
+| `requester_email` | wajib, email, max:255 |
+| `subject` | wajib, string, max:255 |
+| `description` | wajib, string |
 
-| Field | Rules |
-|-------|-------|
-| `requester_name` | required, string, max:255 |
-| `requester_email` | required, email, max:255 |
-| `subject` | required, string, max:255 |
-| `description` | required, string |
-
-**Success:** `201 Created`
-**Validation Error:** `422 Unprocessable Entity`
-```json
-{
-  "message": "The requester name field is required.",
-  "errors": {
-    "requester_name": ["The requester name field is required."]
-  }
-}
-```
+**Sukses:** `201 Created` · **Validasi gagal:** `422 Unprocessable Entity`
 
 ---
 
-#### `GET /api/tickets` — List All Tickets
+#### `GET /api/tickets` — Daftar Semua Tiket
 
-**Query Parameters:**
-
-| Parameter | Type | Description |
-|-----------|------|-------------|
+| Parameter | Tipe | Keterangan |
+|-----------|------|------------|
 | `status` | string | Filter: `open`, `in_progress`, `resolved` |
-| `page` | int | Page number (15 items per page) |
+| `page` | int | Nomor halaman (15 item/halaman) |
 
 **Response:** `200 OK`
-```json
-{
-  "data": [
-    {
-      "id": 1,
-      "requester_name": "Andi Pratama",
-      "requester_email": "andi@example.com",
-      "subject": "Login gagal terus",
-      "description": "...",
-      "status": "open",
-      "created_at": "2026-07-23T07:10:39.000000Z",
-      "responses": [...]
-    }
-  ],
-  "current_page": 1,
-  "last_page": 2,
-  "total": 20
-}
-```
 
 ---
 
-#### `GET /api/tickets/{ticket}` — Get Ticket Details
+#### `GET /api/tickets/{ticket}` — Detail Tiket
 
-**Response:** `200 OK` — Ticket with eager-loaded `responses.user` (id, username, email)
-
-**Not Found:** `404 Not Found`
+**Response:** `200 OK` — Tiket dengan eager-loaded `responses.user`
+**Tidak ditemukan:** `404 Not Found`
 
 ---
 
-#### `POST /api/login` — Authenticate
+#### `POST /api/login` — Login
 
-**Request Body:**
 ```json
 {
   "email": "admin@gmail.com",
@@ -457,209 +280,209 @@ Tests run against **in-memory SQLite** for speed and isolation (configured in `p
 }
 ```
 
-**Success:** `200 OK`
-```json
-{
-  "token": "1|abc123...",
-  "user": {
-    "id": 1,
-    "username": "Admin User",
-    "email": "admin@gmail.com"
-  }
-}
-```
+**Sukses:** `200 OK` (mengembalikan token + data user)
+**Gagal:** `401 Unauthorized`
 
-**Failure:** `401 Unauthorized`
-
-> ⚡ Rate limited: **5 attempts per minute** (`throttle:5,1`)
+> ⚡ Rate limited: **5 percobaan per menit**
 
 ---
 
-### Protected Endpoints (Requires `Authorization: Bearer <token>`)
+### Endpoint Admin (Butuh `Authorization: Bearer <token>`)
 
----
+#### `PATCH /api/tickets/{ticket}/status` — Ubah Status Tiket
 
-#### `PATCH /api/tickets/{ticket}/status` — Update Ticket Status
-
-**Request Body:**
 ```json
 {
   "status": "in_progress"
 }
 ```
 
-**Validation:** `status` must be one of: `open`, `in_progress`, `resolved`
-
-**Success:** `200 OK`
-**Unauthorized:** `401 Unauthorized`
+**Validasi:** `status` harus salah satu dari: `open`, `in_progress`, `resolved`
 
 ---
 
-#### `POST /api/tickets/{ticket}/responses` — Add Admin Response
+#### `POST /api/tickets/{ticket}/responses` — Balas Tiket
 
-**Request Body:**
 ```json
 {
-  "message": "We're investigating this issue and will update you shortly."
+  "message": "Kami sedang menyelidiki masalah ini."
 }
 ```
 
-**Validation:** `message` is required, string
-
-**Success:** `201 Created` — Response linked to authenticated user
-**Unauthorized:** `401 Unauthorized`
+**Validasi:** `message` wajib, string
 
 ---
 
-#### `POST /api/logout` — Revoke Token
+#### `POST /api/logout` — Logout
 
-Deletes the current access token.
-
-**Success:** `200 OK`
+Menghapus token akses yang sedang digunakan.
 
 ---
 
-## Second Backend Technology
+## Second Backend (Node.js)
 
-> To demonstrate knowledge of both PHP and Node.js, a standalone Node.js service is included.
+> Untuk menunjukkan kemampuan di teknologi selain PHP, disertakan service Node.js yang berdiri sendiri.
 
-The second backend is a Node.js + TypeScript application that provides a small ticket statistics endpoint. It operates independently and does not connect to the main Laravel application.
+Backend kedua ini adalah aplikasi **Node.js + Express 5 + TypeScript** yang menyediakan endpoint statistik tiket. Service ini berjalan independen dan tidak terhubung ke database Laravel.
 
-**Run it:**
+### Tech Stack
+
+| Teknologi | Versi |
+|-----------|-------|
+| Node.js | >= 18.x |
+| Express | 5.2.0 |
+| TypeScript | 5.6.3 |
+| tsx (dev runner) | 4.16.0 |
+
+### Cara Menjalankan
+
 ```bash
-npm run dev:node
-# Or: cd second-backend-node && npm run dev
+cd second-backend-node
+npm install
+npm run dev
+# → http://localhost:4000
 ```
 
-This demonstrates:
-- Node.js server setup
-- TypeScript configuration
-- RESTful endpoint design
-- JSON data processing
+### Arsitektur
+
+Menggunakan pola **Controller → Service → Data** dengan pemisahan yang jelas:
+
+```
+second-backend-node/
+├── src/
+│   ├── controllers/
+│   │   └── stats.controller.ts    # Handle request & response
+│   ├── data/
+│   │   └── tickets.example.json   # Data contoh tiket (JSON)
+│   ├── middlewares/
+│   │   └── errorHandler.ts        # 404 handler & global error handler
+│   ├── routes/
+│   │   └── stats.routes.ts        # Definisi route
+│   ├── services/
+│   │   └── stats.service.ts       # Logika bisnis (perhitungan statistik)
+│   ├── types/
+│   │   └── types.ts               # TypeScript type definitions
+│   ├── app.ts                     # Setup Express app
+│   └── server.ts                  # Entry point server (port 4000)
+├── package.json
+└── tsconfig.json
+```
+
+### API Endpoint
+
+#### `GET /api/stats` — Statistik Tiket
+
+Mengembalikan ringkasan statistik dari data tiket contoh.
+
+**Contoh Response:**
+
+```json
+{
+  "total": 18,
+  "by_status": {
+    "open": 6,
+    "in_progress": 6,
+    "resolved": 6
+  },
+  "average_responses_per_ticket": 1.39,
+  "resolution_rate_percent": 33.33
+}
+```
+
+| Field | Keterangan |
+|-------|------------|
+| `total` | Jumlah total tiket |
+| `by_status` | Jumlah tiket per status |
+| `average_responses_per_ticket` | Rata-rata respons per tiket |
+| `resolution_rate_percent` | Persentase tiket yang sudah resolved |
+
+### Yang Didemonstrasikan
+
+- Setup server Node.js dengan Express 5
+- Konfigurasi TypeScript dengan strict mode
+- Desain RESTful endpoint
+- Pemisahan concern (controller/service/route/middleware)
+- Error handling (404 not found + global error handler)
+- Type safety dengan TypeScript interfaces
 
 ---
 
-## Project Structure
+## Testing
+
+### Jalankan Semua Test
+
+```bash
+cd backend-ticket
+php artisan test
+```
+
+Atau langsung dengan Pest:
+
+```bash
+cd backend-ticket
+./vendor/bin/pest
+```
+
+Test berjalan menggunakan **SQLite in-memory** untuk kecepatan dan isolasi.
+
+---
+
+## Struktur Proyek
 
 ```
 support-ticket-system/
-├── backend-ticket/                       # Laravel 13 + Inertia.js + React
+├── backend-ticket/                  # Laravel 13 + Inertia.js + React
 │   ├── app/
-│   │   ├── Http/
-│   │   │   ├── Controllers/
-│   │   │   │   ├── Api/
-│   │   │   │   │   ├── AuthController.php        # Sanctum login/logout
-│   │   │   │   │   ├── TicketController.php       # Ticket CRUD + responses
-│   │   │   │   │   └── UserController.php         # User info (stub)
-│   │   │   │   ├── TicketController.php           # Inertia controller (stub)
-│   │   │   │   └── TicketResponseController.php   # Inertia controller (stub)
-│   │   │   └── Middleware/
-│   │   │       └── HandleInertiaRequests.php
-│   │   ├── Models/
-│   │   │   ├── Ticket.php                 # Ticket model (hasMany responses)
-│   │   │   ├── TicketResponse.php         # Response model (belongsTo ticket, user)
-│   │   │   └── User.php                  # User model (HasApiTokens)
+│   │   ├── Http/Controllers/Api/    # AuthController, TicketController, UserController
+│   │   ├── Models/                  # Ticket, TicketResponse, User
 │   │   └── Providers/
-│   ├── config/                            # Laravel config (auth, sanctum, database, etc.)
 │   ├── database/
-│   │   ├── migrations/                    # 6 migration files
-│   │   ├── seeders/                       # User, Ticket, TicketResponse seeders
-│   │   ├── factories/                     # UserFactory
-│   │   └── database.sqlite                # SQLite database file
-│   ├── resources/
-│   │   ├── js/
-│   │   │   ├── pages/welcome.tsx          # Main React page component
-│   │   │   ├── types/                     # TypeScript type definitions
-│   │   │   ├── lib/utils.ts               # Tailwind merge utility
-│   │   │   ├── actions/                   # Wayfinder route helpers
-│   │   │   └── app.tsx                    # Inertia app entry point
-│   │   └── css/
-│   ├── routes/
-│   │   ├── api.php                        # REST API routes
-│   │   ├── web.php                        # Inertia page routes
-│   │   └── console.php                    # Artisan commands
-│   ├── tests/
-│   │   ├── Pest.php                       # Test configuration
-│   │   ├── Feature/ExampleTest.php        # Feature tests
-│   │   └── Unit/ExampleTest.php           # Unit tests
-│   ├── composer.json                      # PHP dependencies
-│   ├── package.json                       # Node.js dependencies
-│   ├── vite.config.ts                     # Vite build configuration
-│   ├── phpunit.xml                        # Test runner configuration
-│   └── tsconfig.json                      # TypeScript configuration
-├── screenshots/                           # Application screenshots
-├── docker-compose.yml                     # PostgreSQL container
-├── package.json                           # Root monorepo scripts
-├── .env.example                           # Environment template
-├── .gitignore                             # Git ignore rules
-├── AI-USAGE.md                            # AI tools documentation
-└── README.md                              # This file
+│   │   ├── migrations/              # Migrasi database
+│   │   └── seeders/                 # Data sample
+│   ├── resources/js/                # React + TypeScript frontend
+│   ├── routes/                      # API & web routes
+│   └── tests/                      # Pest PHP tests
+├── second-backend-node/             # Node.js + Express 5 + TypeScript
+│   └── src/                        # Controller, Service, Route, Middleware
+├── screenshots/                     # Screenshot aplikasi
+├── docker-compose.yml               # Container PostgreSQL
+├── package.json                     # Script monorepo (concurrently)
+├── AI-USAGE.md                      # Dokumentasi penggunaan AI
+└── README.md                        # File ini
 ```
 
 ---
 
-## Known Limitations
+## Keterbatasan
 
-1. **No user registration**: Only seeded users can log in. There is no public registration endpoint — users submit tickets without an account.
-2. **No ticket ownership**: Tickets are submitted with `requester_name` and `requester_email` but are not linked to a `users` account. Requesters cannot track their own tickets via login.
-3. **Single-page frontend**: The React frontend is primarily contained in `welcome.tsx`. In a production app, this would be decomposed into smaller, reusable components.
-4. **No real-time updates**: The ticket list does not auto-refresh. Users must manually reload to see new tickets or status changes.
-5. **No file attachments**: Users cannot attach screenshots or files to tickets.
-6. **No email notifications**: No email is sent when a ticket status changes or a response is added.
-7. **No role-based access control**: Any authenticated user (from the `users` table) is treated as an admin. There is no granular role/permission system.
-8. **SQLite limitations**: SQLite does not support concurrent writes well. PostgreSQL (available via Docker) is recommended for production.
-9. **Second backend is standalone**: The Node.js service does not connect to the main database — it operates independently.
-10. **Basic pagination**: Uses Laravel's default page-based pagination. No infinite scroll or cursor-based pagination.
+1. **Tidak ada registrasi user** — Hanya user yang sudah di-seed yang bisa login
+2. **Tiket tidak terhubung ke akun** — Pengirim tiket tidak bisa tracking via login
+3. **Frontend single-page** — Semua komponen React ada di `welcome.tsx`
+4. **Tidak ada real-time update** — Harus refresh manual untuk melihat perubahan
+5. **Tidak ada upload file** — User tidak bisa melampirkan file ke tiket
+6. **Tidak ada notifikasi email** — Tidak ada email saat status berubah
+7. **Tidak ada role-based access** — Semua user yang login dianggap admin
+8. **Second backend independen** — Service Node.js tidak terhubung ke database utama
 
 ---
 
-## Future Improvements
+## Estimasi Waktu
 
-Given more time, I would implement the following:
-
-### Architecture
-- [ ] Break `welcome.tsx` into reusable components (`TicketList`, `TicketForm`, `TicketDetail`, `AdminPanel`, etc.)
-- [ ] Build a standalone Next.js frontend (as originally specified) in addition to the Inertia.js SPA
-- [ ] Add proper API resource transformers (`JsonResource`) for consistent API responses
-
-### Features
-- [ ] User registration and account-based ticket tracking
-- [ ] Role-based access control (User / Agent / Admin)
-- [ ] Real-time updates using Laravel Broadcasting (WebSockets / Pusher)
-- [ ] Email notifications on ticket status changes and new responses
-- [ ] File attachments for tickets (images, documents)
-- [ ] Full-text search across ticket subjects and descriptions
-- [ ] Dashboard with analytics (ticket volume, average resolution time, SLA tracking)
-- [ ] Ticket priority system with SLA deadlines
-
-### Technical
-- [ ] Comprehensive test suite with more edge cases and API integration tests
-- [ ] E2E testing with Cypress or Playwright
-- [ ] CI/CD pipeline (GitHub Actions for automated testing, linting, deployment)
-- [ ] API versioning (`/api/v1/`)
-- [ ] Request rate limiting on all public endpoints
-- [ ] CSRF protection for web routes
-- [ ] API documentation with Swagger/OpenAPI
+| Pekerjaan | Waktu |
+|-----------|-------|
+| Setup & perencanaan arsitektur | ~1 jam |
+| Desain skema database & migrasi | ~30 menit |
+| Backend API (controller, validasi, auth) | ~2 jam |
+| Frontend (React + Inertia.js, styling) | ~3 jam |
+| Database seeder & data sample | ~30 menit |
+| Setup testing & tulis test | ~1 jam |
+| Second backend (Node.js) | ~30 menit |
+| Dokumentasi (README, AI-USAGE) | ~1 jam |
+| Debugging & review | ~1 jam |
+| **Total** | **~10.5 jam** |
 
 ---
 
-## Estimated Time Spent
+## Lisensi
 
-| Task | Time |
-|------|------|
-| Project setup & architecture planning | ~1 hour |
-| Database schema design & migrations | ~30 minutes |
-| Backend API (controllers, validation, auth) | ~2 hours |
-| Frontend (React + Inertia.js, styling, forms) | ~3 hours |
-| Database seeders & sample data | ~30 minutes |
-| Testing setup & writing tests | ~1 hour |
-| Second backend (Node.js) | ~30 minutes |
-| Documentation (README, AI-USAGE) | ~1 hour |
-| Debugging, polish & review | ~1 hour |
-| **Total** | **~10.5 hours** |
-
----
-
-## License
-
-This project was created as a technical assessment submission.
+Proyek ini dibuat sebagai submission technical assessment.
