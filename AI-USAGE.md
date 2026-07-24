@@ -2,135 +2,24 @@
 
 ## Tools AI yang Digunakan
 
-| Tool | Versi / Model | Kegunaan |
-|------|---------------|----------|
-| **Google Gemini (Antigravity)** | Claude Opus 4.6 | Pembuatan kode, panduan arsitektur, debugging, dokumentasi |
-| **GitHub Copilot** | VS Code Extension | Autocomplete kode saat menulis |
+Claude (Sonnet) digunakan sepanjang proses perencanaan, review kode backend (Laravel), desain backend kedua (Node.js/TypeScript), implementasi frontend (Next.js), debugging, dan penyusunan dokumentasi.
 
----
+## Tugas yang Dibantu AI
 
-## Bagian yang Dibantu AI
+- **Perencanaan**: memecah brief assessment menjadi rencana bertahap yang disesuaikan dengan bobot rubric penilaian, termasuk keputusan scope eksplisit ("wajib dikerjakan" vs "boleh dilewati kalau waktu mepet") supaya hasil akhirnya sesuai dengan yang diminta tidak kurang, tidak berlebihan.
+- **Backend (Laravel)**: review dan refactor controller ticket & auth (menghapus try/catch berlebih yang menutupi error asli, diganti dengan exception handling bawaan Laravel dan route model binding), membantu mendesain pendekatan otorisasi admin (token Sanctum, tanpa endpoint registrasi publik).
+- **Backend kedua (Node.js/TypeScript)**: mendesain dan mengimplementasikan endpoint standalone Express + TypeScript (`GET /api/stats`) dengan struktur berlapis route -> controller -> service, sengaja tanpa abstraksi tambahan (tanpa DI container, tanpa repository layer) karena tidak dibutuhkan untuk satu endpoint.
+- **Frontend (Next.js)**: implementasi halaman list, detail, buat tiket, dan login; admin actions; state autentikasi lewat React Context; penanganan loading/error/not-found sesuai konvensi App Router.
+- **Debugging**: mendiagnosis ketidakcocokan TypeScript 7 dengan `ts-node` (konflik peer dependency dan crash saat runtime), serta ketidakcocokan parameter route (`{id}` di route vs parameter `Ticket $ticket` yang di-type di controller, yang menyebabkan implicit route model binding gagal).
+- **Dokumentasi**: menyusun struktur README dan file ini.
 
-### 1. Scaffolding & Arsitektur Proyek
-- Membuat struktur proyek Laravel dengan React starter kit
-- Menyarankan layout monorepo dengan `backend-ticket/` dan `second-backend-node/`
-- Merekomendasikan Inertia.js + React untuk pendekatan SPA
+## Contoh Output AI yang Salah atau Perlu Diperbaiki
 
-### 2. Desain Skema Database
-- Membantu merancang migrasi `tickets` dan `ticket_responses`
-- Menyarankan penggunaan `enum` di level database untuk kolom `status`
-- Merekomendasikan cascade delete pada foreign key
+Saat saya bertanya kenapa pembuatan tiket tidak perlu login sementara aksi admin perlu, jawaban pertama Claude adalah "karena hal itu tidak disebutkan secara eksplisit di soal" yang saya tunjukkan sebagai argumen lemah dan tidak konsisten, karena logika yang sama seharusnya juga berarti admin tidak perlu login (yang juga tidak disebutkan eksplisit). Claude mengakui alasan itu keliru dan memberikan penjelasan yang lebih kuat: pembagian struktural soal antara "User Features" dan "Admin Features", ditambah kriteria penilaian eksplisit "Authorization awareness" di rubric, adalah dasar sebenarnya yang membenarkan aksi admin perlu digerbangi otorisasi. Keputusan teknis akhirnya tidak berubah, tapi saya memastikan memahami dan bisa mempertanggungjawabkan sendiri alasannya bukan menerima begitu saja justifikasi pertama yang diberikan AI.
 
-### 3. Logika Controller API
-- Membuat boilerplate `Api\TicketController` dengan operasi CRUD
-- Membantu implementasi aturan validasi request
-- Menyarankan eager loading relasi `responses.user` untuk menghindari N+1 query
+## Bagaimana Saya Mereview dan Menguji Kode Hasil AI
 
-### 4. Autentikasi
-- Memandu setup Laravel Sanctum untuk token authentication
-- Membuat `Api\AuthController` dengan endpoint login/logout
-- Mengkonfigurasi middleware `auth:sanctum` dan rate limiting
-
-### 5. Database Seeder
-- Membuat data tiket sample dalam bahasa Indonesia (20 tiket)
-- Membuat seeder response dan user (3 akun staff)
-
-### 6. Frontend (React + TypeScript + Inertia.js)
-- Membantu membangun komponen `welcome.tsx`
-- Membuat utility function dan setup Inertia.js
-
-### 7. Second Backend (Node.js)
-- Membuat struktur proyek Express 5 + TypeScript
-- Menyusun arsitektur Controller → Service → Data
-- Membuat endpoint statistik tiket (`GET /api/stats`)
-- Setup TypeScript interfaces dan error handling middleware
-
-### 8. Testing & Dokumentasi
-- Konfigurasi Pest PHP dengan SQLite in-memory
-- Membuat file README.md dan AI-USAGE.md ini
-
----
-
-## Contoh Output AI yang Kurang Optimal
-
-### Masalah: N+1 Query pada Listing Tiket
-
-**Yang dibuat AI:**
-
-```php
-public function index(Request $request)
-{
-    $query = Ticket::query();
-
-    if ($request->has('status')) {
-        $query->where('status', $request->status);
-    }
-
-    return response()->json($query->paginate(15));
-}
-```
-
-**Masalahnya:**
-
-Kode di atas tidak menyertakan eager loading relasi `responses`. Setiap tiket memicu query terpisah untuk mengambil response-nya — ini adalah masalah **N+1 query**. Dengan 15 tiket per halaman, hasilnya 16 query, bukan 2.
-
-**Perbaikan saya:**
-
-```php
-public function index(Request $request)
-{
-    $query = Ticket::with('responses'); // Tambah eager loading
-
-    if ($request->has('status')) {
-        $query->where('status', $request->status);
-    }
-
-    return response()->json($query->paginate(15));
-}
-```
-
-Menambahkan `::with('responses')` mengurangi jumlah query dari N+1 menjadi hanya 2 query.
-
-**Cara saya menemukan masalah ini:**
-
-Saya memeriksa query menggunakan `DB::listen()` saat development dan melihat query `SELECT * FROM ticket_responses WHERE ticket_id = ?` yang berulang-ulang. Pengalaman sebelumnya dengan ORM membantu saya mengenali masalah ini.
-
----
-
-## Cara Review dan Testing Kode AI
-
-### Proses Review
-
-1. **Review baris per baris** — Setiap kode dari AI dibaca dan dipahami sebelum diterima
-2. **Pahami alasannya** — Untuk setiap saran, saya pastikan paham *mengapa* AI merekomendasikan pendekatan tertentu
-3. **Audit keamanan** — Khusus dicek:
-   - Tidak ada SQL injection (Eloquent menggunakan parameterized queries)
-   - Mass assignment protection (`$fillable` diset dengan benar)
-   - Middleware autentikasi diterapkan di route admin
-   - Password di-hash dengan benar
-   - Tidak ada credentials yang di-hardcode
-   - Rate limiting pada endpoint login
-
-### Proses Testing
-
-1. **Testing API manual** — Test setiap endpoint dengan input valid dan invalid
-   - Cek HTTP status code (200, 201, 401, 404, 422)
-   - Verifikasi pesan error validasi
-   - Test alur autentikasi (login → token → request → logout)
-
-2. **Automated test** — Jalankan Pest test suite (`php artisan test`)
-
-3. **Edge case yang ditest manual:**
-   - Submit tiket dengan field kosong → 422
-   - Format email tidak valid → 422
-   - Akses route admin tanpa token → 401
-   - Request tiket yang tidak ada → 404
-   - Melebihi rate limit login → 429
-
-4. **Testing frontend** — Test semua alur user di browser
-
----
-
-## Kesimpulan
-
-Tools AI digunakan sebagai **alat bantu percepatan**, bukan pengganti pemahaman. Setiap kode yang dihasilkan AI direview untuk kebenaran, keamanan, dan performa sebelum dimasukkan. Saya bertanggung jawab penuh atas semua kode yang disubmit dan bisa menjelaskan setiap bagian dari codebase ini.
+- Menjalankan setiap endpoint backend secara manual lewat `curl` (buat tiket, list dan filter, update status, tambah response, login dan logout) sebelum menganggap bagian manapun selesai.
+- Menemukan bug di mana kode yang disarankan melakukan eager loading dengan mereferensikan kolom `username`, padahal migration `users` yang saya buat sendiri kolomnya `name` bug ini ditemukan lewat pengecekan manual sebelum masuk ke kode final.
+- Memperbaiki sendiri ketidakcocokan route model binding (route pakai `{id}`, controller mengharapkan `Ticket $ticket`) setelah diuji dan ditemukan errornya.
+- Membaca dan memahami setiap file sebelum menambahkannya ke project tidak meng-commit kode yang tidak bisa saya jelaskan sendiri.

@@ -1,12 +1,15 @@
 {
   "name": "support-ticket-system",
   "version": "1.0.0",
+  "private": true,
   "description": "Simple Support Ticket System - Full-Stack Developer Assessment",
   "scripts": {
+    "setup:node": "npm install --prefix second-backend-node",
+    "setup:frontend": "npm install --prefix frontend-nextjs",
     "dev:backend": "cd backend-laravel && php artisan serve",
     "dev:frontend": "cd frontend-nextjs && npm run dev",
     "dev:node": "cd second-backend-node && npm run dev",
-    "dev": "concurrently -c \"cyan,magenta,yellow\" \"npm:dev:backend\" \"npm:dev:frontend\" \"npm:dev:node\""
+    "dev": "concurrently -c \"cyan,magenta,yellow\" -n \"laravel,nextjs,node\" \"npm:dev:backend\" \"npm:dev:frontend\" \"npm:dev:node\""
   },
   "repository": {
     "type": "git",

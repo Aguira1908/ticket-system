@@ -22,8 +22,7 @@ class TicketController extends Controller
     ]);
 
     $tickets = Ticket::query()
-      ->when($request->query('status'), fn($query, $status) => $query->where('status', $status))
-      ->latest()
+      ->when($request->query('status'), fn($query, $status) => $query->status($status))->latest()
       ->paginate(15);
 
     return response()->json($tickets);

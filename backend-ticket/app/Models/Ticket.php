@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -19,21 +20,26 @@ use Illuminate\Support\Carbon;
  */
 class Ticket extends Model
 {
-    use HasFactory;
+  use HasFactory;
 
-    protected $fillable = [
-        'requester_name',
-        'requester_email',
-        'subject',
-        'description',
-        'status',
-    ];
+  protected $fillable = [
+    'requester_name',
+    'requester_email',
+    'subject',
+    'description',
+    'status',
+  ];
 
-    /**
-     * @return HasMany<TicketResponse, $this>
-     */
-    public function responses(): HasMany
-    {
-        return $this->hasMany(TicketResponse::class);
-    }
+  /**
+   * @return HasMany<TicketResponse, $this>
+   */
+  public function responses(): HasMany
+  {
+    return $this->hasMany(TicketResponse::class);
+  }
+
+  public function scopeStatus(Builder $query, string $status): Builder
+  {
+    return $query->where('status', $status);
+  }
 }
