@@ -1,66 +1,63 @@
-# AI Usage Documentation
+# Dokumentasi Penggunaan AI
 
-## AI Tools Used
+## Tools AI yang Digunakan
 
-| Tool | Version / Model | Purpose |
-|------|----------------|---------|
-| **Google Gemini (Antigravity)** | Claude Opus 4.6 | Code generation, architecture guidance, debugging, and documentation |
-| **GitHub Copilot** | VS Code Extension | Inline code completion and suggestions while writing |
+| Tool | Versi / Model | Kegunaan |
+|------|---------------|----------|
+| **Google Gemini (Antigravity)** | Claude Opus 4.6 | Pembuatan kode, panduan arsitektur, debugging, dokumentasi |
+| **GitHub Copilot** | VS Code Extension | Autocomplete kode saat menulis |
 
 ---
 
-## Tasks AI Assisted With
+## Bagian yang Dibantu AI
 
-### 1. Project Scaffolding & Architecture
-- Generated the initial Laravel project structure using the React starter kit (`laravel/react`)
-- Suggested the monorepo layout with `backend-ticket/` for the Laravel + Inertia.js application
-- Recommended the use of Inertia.js + React for the frontend SPA approach
+### 1. Scaffolding & Arsitektur Proyek
+- Membuat struktur proyek Laravel dengan React starter kit
+- Menyarankan layout monorepo dengan `backend-ticket/` dan `second-backend-node/`
+- Merekomendasikan Inertia.js + React untuk pendekatan SPA
 
-### 2. Database Schema Design
-- Assisted in designing the `tickets` and `ticket_responses` migration schemas
-- Suggested using database-level `enum` for the `status` column (`open`, `in_progress`, `resolved`) with an index for query performance
-- Recommended cascade delete on `ticket_responses` foreign keys (`ticket_id` and `user_id`)
+### 2. Desain Skema Database
+- Membantu merancang migrasi `tickets` dan `ticket_responses`
+- Menyarankan penggunaan `enum` di level database untuk kolom `status`
+- Merekomendasikan cascade delete pada foreign key
 
-### 3. API Controller Logic
-- Generated boilerplate for the `Api\TicketController` with CRUD operations
-- Helped implement request validation rules (e.g., `requester_name` max length, `requester_email` email format, `status` enum validation with `in:open,in_progress,resolved`)
-- Suggested eager loading of `responses.user` relationship to avoid N+1 queries
+### 3. Logika Controller API
+- Membuat boilerplate `Api\TicketController` dengan operasi CRUD
+- Membantu implementasi aturan validasi request
+- Menyarankan eager loading relasi `responses.user` untuk menghindari N+1 query
 
-### 4. Authentication & Authorization
-- Guided the setup of Laravel Sanctum for API token authentication
-- Generated `Api\AuthController` with login/logout endpoints using `Hash::check()` for password verification
-- Helped configure the `auth:sanctum` middleware for admin-only routes (status update and ticket responses)
-- Suggested rate limiting on the login endpoint (`throttle:5,1`)
+### 4. Autentikasi
+- Memandu setup Laravel Sanctum untuk token authentication
+- Membuat `Api\AuthController` dengan endpoint login/logout
+- Mengkonfigurasi middleware `auth:sanctum` dan rate limiting
 
-### 5. Database Seeders
-- Generated realistic sample ticket data in Indonesian for the `TicketSeeder` (20 tickets with various statuses and priorities)
-- Created `TicketResponseSeeder` with follow-up responses for in-progress and resolved tickets
-- Created `UserSeeder` with 3 staff accounts (Admin User, Support Agent, Budi Santoso)
+### 5. Database Seeder
+- Membuat data tiket sample dalam bahasa Indonesia (20 tiket)
+- Membuat seeder response dan user (3 akun staff)
 
 ### 6. Frontend (React + TypeScript + Inertia.js)
-- Assisted in building the `welcome.tsx` page component
-- Generated utility functions (`cn()` using `clsx` + `tailwind-merge`)
-- Helped set up Inertia.js client-side entry point with `createInertiaApp()`
+- Membantu membangun komponen `welcome.tsx`
+- Membuat utility function dan setup Inertia.js
 
-### 7. Testing
-- Helped configure Pest PHP with `RefreshDatabase` trait for test isolation
-- Suggested PHPUnit XML configuration with in-memory SQLite for fast testing
-- Assisted with structuring Feature and Unit test directories
+### 7. Second Backend (Node.js)
+- Membuat struktur proyek Express 5 + TypeScript
+- Menyusun arsitektur Controller → Service → Data
+- Membuat endpoint statistik tiket (`GET /api/stats`)
+- Setup TypeScript interfaces dan error handling middleware
 
-### 8. Documentation
-- Generated this `AI-USAGE.md` file
-- Generated the `README.md` with setup instructions and architecture explanation
+### 8. Testing & Dokumentasi
+- Konfigurasi Pest PHP dengan SQLite in-memory
+- Membuat file README.md dan AI-USAGE.md ini
 
 ---
 
-## Example of Incorrect or Suboptimal AI Output
+## Contoh Output AI yang Kurang Optimal
 
-### Issue: N+1 Query Problem in Ticket Listing
+### Masalah: N+1 Query pada Listing Tiket
 
-**What AI generated:**
+**Yang dibuat AI:**
 
 ```php
-// Api\TicketController@index - Initial AI suggestion
 public function index(Request $request)
 {
     $query = Ticket::query();
@@ -73,16 +70,16 @@ public function index(Request $request)
 }
 ```
 
-**What was wrong:**
+**Masalahnya:**
 
-The AI-generated code did not include eager loading of the `responses` relationship. When the frontend displayed ticket details (including response counts), each ticket triggered a separate database query to fetch its responses — a classic **N+1 query problem**. With 15 tickets per page, this resulted in 16 queries instead of 2.
+Kode di atas tidak menyertakan eager loading relasi `responses`. Setiap tiket memicu query terpisah untuk mengambil response-nya — ini adalah masalah **N+1 query**. Dengan 15 tiket per halaman, hasilnya 16 query, bukan 2.
 
-**How I fixed it:**
+**Perbaikan saya:**
 
 ```php
 public function index(Request $request)
 {
-    $query = Ticket::with('responses'); // Added eager loading
+    $query = Ticket::with('responses'); // Tambah eager loading
 
     if ($request->has('status')) {
         $query->where('status', $request->status);
@@ -92,60 +89,48 @@ public function index(Request $request)
 }
 ```
 
-Adding `::with('responses')` reduced the query count from N+1 to just 2 queries (one for tickets, one for all related responses), which is significantly more efficient.
+Menambahkan `::with('responses')` mengurangi jumlah query dari N+1 menjadi hanya 2 query.
 
-**How I identified the issue:**
+**Cara saya menemukan masalah ini:**
 
-I inspected the queries using Laravel's `DB::listen()` during development and noticed the repeated `SELECT * FROM ticket_responses WHERE ticket_id = ?` queries. Understanding ORM eager loading vs lazy loading from prior experience helped me recognize this immediately.
-
----
-
-## How AI-Generated Code Was Reviewed and Tested
-
-### Code Review Process
-
-1. **Line-by-line review**: Every piece of AI-generated code was read and understood before being accepted. I did not blindly copy-paste any suggestions.
-
-2. **Understanding the "why"**: For each suggestion, I ensured I understood *why* the AI recommended a particular approach (e.g., why Sanctum over Passport for API token auth, why enum columns for status).
-
-3. **Security audit**: I specifically checked for:
-   - SQL injection vulnerabilities (confirmed Eloquent's parameterized queries are used)
-   - Mass assignment protection (`$fillable` is properly set on all models)
-   - Authentication middleware correctly applied to admin-only routes
-   - Password hashing (User model casts `password` as `hashed`)
-   - No credentials hardcoded or committed (`.env` is in `.gitignore`)
-   - Rate limiting on login endpoint to prevent brute-force attacks
-
-4. **Type safety**: Verified that TypeScript types in the frontend matched the API response structure from the backend.
-
-### Testing Process
-
-1. **Manual API testing**: Used browser and `curl` to test every API endpoint with valid and invalid inputs:
-   - Confirmed proper HTTP status codes (200, 201, 401, 404, 422)
-   - Verified validation error messages are returned correctly
-   - Tested authentication flow (login → token → authenticated request → logout)
-
-2. **Automated tests**: Ran the Pest test suite (`php artisan test`) to verify:
-   - Feature test: Homepage returns 200 status
-   - Unit test: Basic assertion sanity check
-   - Tests run against in-memory SQLite (configured in `phpunit.xml`)
-
-3. **Edge cases tested manually**:
-   - Submitting a ticket with empty fields → 422 with validation errors
-   - Submitting a ticket with invalid email format → 422 validation error
-   - Accessing admin routes without token → 401 Unauthorized
-   - Requesting a non-existent ticket → 404 Not Found
-   - Filtering tickets by invalid status → Returns empty results
-   - Exceeding login rate limit (5 attempts/minute) → 429 Too Many Requests
-
-4. **Frontend testing**: Manually tested all user flows in the browser:
-   - Creating a ticket and seeing it appear in the list
-   - Viewing ticket details with responses
-   - Admin login and status update flow
-   - Responsive layout on different viewport sizes
+Saya memeriksa query menggunakan `DB::listen()` saat development dan melihat query `SELECT * FROM ticket_responses WHERE ticket_id = ?` yang berulang-ulang. Pengalaman sebelumnya dengan ORM membantu saya mengenali masalah ini.
 
 ---
 
-## Summary
+## Cara Review dan Testing Kode AI
 
-AI tools were used as an **accelerator**, not a replacement for understanding. Every piece of generated code was reviewed for correctness, security, and performance before inclusion. The candidate takes full responsibility for all submitted code and can explain any part of the codebase in detail.
+### Proses Review
+
+1. **Review baris per baris** — Setiap kode dari AI dibaca dan dipahami sebelum diterima
+2. **Pahami alasannya** — Untuk setiap saran, saya pastikan paham *mengapa* AI merekomendasikan pendekatan tertentu
+3. **Audit keamanan** — Khusus dicek:
+   - Tidak ada SQL injection (Eloquent menggunakan parameterized queries)
+   - Mass assignment protection (`$fillable` diset dengan benar)
+   - Middleware autentikasi diterapkan di route admin
+   - Password di-hash dengan benar
+   - Tidak ada credentials yang di-hardcode
+   - Rate limiting pada endpoint login
+
+### Proses Testing
+
+1. **Testing API manual** — Test setiap endpoint dengan input valid dan invalid
+   - Cek HTTP status code (200, 201, 401, 404, 422)
+   - Verifikasi pesan error validasi
+   - Test alur autentikasi (login → token → request → logout)
+
+2. **Automated test** — Jalankan Pest test suite (`php artisan test`)
+
+3. **Edge case yang ditest manual:**
+   - Submit tiket dengan field kosong → 422
+   - Format email tidak valid → 422
+   - Akses route admin tanpa token → 401
+   - Request tiket yang tidak ada → 404
+   - Melebihi rate limit login → 429
+
+4. **Testing frontend** — Test semua alur user di browser
+
+---
+
+## Kesimpulan
+
+Tools AI digunakan sebagai **alat bantu percepatan**, bukan pengganti pemahaman. Setiap kode yang dihasilkan AI direview untuk kebenaran, keamanan, dan performa sebelum dimasukkan. Saya bertanggung jawab penuh atas semua kode yang disubmit dan bisa menjelaskan setiap bagian dari codebase ini.
