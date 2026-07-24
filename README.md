@@ -13,8 +13,8 @@ Aplikasi tiket dukungan sederhana yang dibangun untuk penilaian teknis Full-Stac
 
 ```
 support-ticket-system/
-├── backend-laravel/         # API Utama
-├── frontend-nextjs/         # UI untuk pengguna & admin
+├── backend-ticket/         # API Utama
+├── next-ticket-fe/         # UI untuk pengguna & admin
 ├── second-backend-node/     # Endpoint stats mandiri
 ├── docker-compose.yml       # Hanya PostgreSQL
 ├── .env.example             # Template konfigurasi DB Docker Compose
@@ -55,16 +55,16 @@ Buka `.env` dan atur `DB_PASSWORD` ke nilai apa pun (misal: `secret`) — file i
 docker compose up -d
 ```
 
-`docker-compose.yml` berada di root repositori, dan Docker Compose secara otomatis membaca `${DB_PORT}`, `${DB_DATABASE}`, `${DB_USERNAME}`, `${DB_PASSWORD}` dari `.env` root untuk substitusi variabelnya sendiri. Ini adalah **file yang terpisah** dari `backend-laravel/.env` (Laravel membaca `.env`-nya sendiri dari foldernya sendiri) — lihat catatan pada langkah 3.
+`docker-compose.yml` berada di root repositori, dan Docker Compose secara otomatis membaca `${DB_PORT}`, `${DB_DATABASE}`, `${DB_USERNAME}`, `${DB_PASSWORD}` dari `.env` root untuk substitusi variabelnya sendiri. Ini adalah **file yang terpisah** dari `backend-ticket/.env` (Laravel membaca `.env`-nya sendiri dari foldernya sendiri) — lihat catatan pada langkah 3.
 
 ### 3. Backend (Laravel)
 
 ```bash
-cd backend-laravel
+cd backend-ticket
 cp .env.example .env
 ```
 
-Buka `backend-laravel/.env` dan atur kelima nilai ini agar **sama persis** dengan yang baru saja Anda atur di `.env` root (kedua file ini terpisah dan tidak sinkron secara otomatis):
+Buka `backend-ticket/.env` dan atur kelima nilai ini agar **sama persis** dengan yang baru saja Anda atur di `.env` root (kedua file ini terpisah dan tidak sinkron secara otomatis):
 
 ```
 DB_CONNECTION=pgsql
@@ -110,7 +110,7 @@ npm install
 ### 5. Frontend (Next.js)
 
 ```bash
-cd ../frontend-nextjs
+cd ../next-ticket-fe
 cp .env.local.example .env.local
 npm install
 ```
@@ -126,9 +126,9 @@ npm install
 | DB_USERNAME | Pengguna (user) database                                | postgres         |
 | DB_PASSWORD | Password database (isi secara manual, jangan di-commit) | —                |
 
-File ini juga menyertakan `DB_CONNECTION` dan `DB_HOST` sebagai template kemudahan (Docker Compose sendiri tidak membaca keduanya) — variabel-variabel tersebut ada agar kelima nilainya mudah disalin langsung ke `backend-laravel/.env` di bawah ini.
+File ini juga menyertakan `DB_CONNECTION` dan `DB_HOST` sebagai template kemudahan (Docker Compose sendiri tidak membaca keduanya) — variabel-variabel tersebut ada agar kelima nilainya mudah disalin langsung ke `backend-ticket/.env` di bawah ini.
 
-**backend-laravel/.env**
+**backend-ticket/.env**
 
 | Variabel      | Deskripsi                                                                                | Contoh                |
 | ------------- | ---------------------------------------------------------------------------------------- | --------------------- |
@@ -140,7 +140,7 @@ File ini juga menyertakan `DB_CONNECTION` dan `DB_HOST` sebagai template kemudah
 | DB_PASSWORD   | Password database (isi secara manual, jangan di-commit)                                  | —                     |
 | FRONTEND_URL  | Origin CORS yang diizinkan                                                               | http://localhost:3000 |
 
-**frontend-nextjs/.env.local**
+**next-ticket-fe/.env.local**
 
 | Variabel            | Deskripsi            | Contoh                    |
 | ------------------- | -------------------- | ------------------------- |
@@ -151,7 +151,7 @@ File ini juga menyertakan `DB_CONNECTION` dan `DB_HOST` sebagai template kemudah
 ## Migrasi Database
 
 ```bash
-cd backend-laravel
+cd backend-ticket
 php artisan migrate                 # jalankan migrasi yang tertunda
 php artisan migrate:fresh --seed    # reset dan reseed semuanya (hanya untuk dev)
 ```
@@ -175,11 +175,11 @@ npm run dev:node      # Node     → http://localhost:4000
 ## Menjalankan Pengujian (Tests)
 
 ```bash
-cd backend-laravel
+cd backend-ticket
 php artisan test
 ```
 
-Mencakup satu unit test, satu feature/integration test, dan satu validation/authorization test — lihat `backend-laravel/tests/`.
+Mencakup satu unit test, satu feature/integration test, dan satu validation/authorization test — lihat `backend-ticket/tests/`.
 
 ## Arsitektur
 
@@ -187,7 +187,7 @@ Mencakup satu unit test, satu feature/integration test, dan satu validation/auth
 - **Server Components untuk membaca, Client Components untuk interaktivitas**: halaman daftar dan detail tiket mengambil data di sisi server pada Next.js; form, filter, dan tindakan admin adalah client components yang memanggil API Laravel secara langsung.
 - **Backend kedua berlapis (Layered second backend)**: bahkan untuk sebuah endpoint tunggal, layanan Node/TypeScript dibagi menjadi route → controller → service untuk menunjukkan pemisahan tanggung jawab, tanpa menambahkan abstraksi yang tidak diperlukan (tanpa DI container, tanpa layer repository).
 - **Bentuk error API yang konsisten**: Laravel mengembalikan `{ message, errors? }` untuk semua respons error; kelas `ApiError` frontend memusatkan parsing sehingga setiap form dapat memetakan error pada level field tanpa boilerplate yang berulang.
-- **Dua file `.env`, disinkronkan secara manual**: `docker-compose.yml` berada di root repositori dan membaca `.env` tingkat proyek Docker Compose sendiri (juga di root) untuk interpolasi variabel — ini harus terpisah dari `backend-laravel/.env`, yang dibaca secara independen oleh Laravel. Alih-alih menyembunyikannya, kedua file didokumentasikan secara eksplisit dalam Instruksi Setup dengan contoh nilai yang cocok.
+- **Dua file `.env`, disinkronkan secara manual**: `docker-compose.yml` berada di root repositori dan membaca `.env` tingkat proyek Docker Compose sendiri (juga di root) untuk interpolasi variabel — ini harus terpisah dari `backend-ticket/.env`, yang dibaca secara independen oleh Laravel. Alih-alih menyembunyikannya, kedua file didokumentasikan secara eksplisit dalam Instruksi Setup dengan contoh nilai yang cocok.
 
 ## Batasan yang Diketahui
 
@@ -196,11 +196,11 @@ Mencakup satu unit test, satu feature/integration test, dan satu validation/auth
 - Hanya PostgreSQL yang menggunakan Docker; Laravel, Next.js, dan backend Node berjalan secara native untuk mematuhi batas waktu penilaian.
 - Tidak ada pembatasan kecepatan (rate limiting) pada endpoint pembuatan tiket publik (hanya endpoint login yang memiliki `throttle:5,1`).
 - Menjalankan `php artisan migrate --seed` lebih dari sekali dapat membuat duplikat user admin jika seeder menggunakan `create()` alih-alih `firstOrCreate()` — tidak masalah untuk satu pengaturan lokal, namun layak diperbaiki untuk penggunaan berulang.
-- Kredensial database diduplikasi di `.env` root dan `backend-laravel/.env` (Docker Compose dan Laravel masing-masing membaca `.env` dari direktorinya sendiri) dan harus disinkronkan secara manual — dipilih daripada flag command-line (`--env-file`) untuk menjaga instruksi setup tetap sederhana bagi reviewer yang tidak familier dengan resolusi env-file Docker Compose.
+- Kredensial database diduplikasi di `.env` root dan `backend-ticket/.env` (Docker Compose dan Laravel masing-masing membaca `.env` dari direktorinya sendiri) dan harus disinkronkan secara manual — dipilih daripada flag command-line (`--env-file`) untuk menjaga instruksi setup tetap sederhana bagi reviewer yang tidak familier dengan resolusi env-file Docker Compose.
 
 ## Apa yang Akan Saya Tingkatkan Dengan Lebih Banyak Waktu
 
-- Mengarahkan Docker Compose pada satu file `.env` (mis. `docker compose --env-file backend-laravel/.env up -d`) untuk menghapus kredensial DB yang diduplikasi antara root dan `backend-laravel/`.
+- Mengarahkan Docker Compose pada satu file `.env` (mis. `docker compose --env-file backend-ticket/.env up -d`) untuk menghapus kredensial DB yang diduplikasi antara root dan `backend-ticket/`.
 - `docker-compose.yml` yang mencakup ketiga layanan untuk setup menggunakan satu perintah sesungguhnya.
 - UI Paginasi pada daftar tiket.
 - Pembatasan kecepatan (Rate limiting) pada `POST /api/tickets` untuk mencegah pengiriman spam.
