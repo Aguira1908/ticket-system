@@ -9,12 +9,12 @@ Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5.
 
 Route::get('/tickets', [TicketController::class, 'index']);
 Route::post('/tickets', [TicketController::class, 'store']);
-Route::get('/tickets/{id}', [TicketController::class, 'show']);
+Route::get('/tickets/{ticket}', [TicketController::class, 'show']);
 
 // Admin routes (auth required)
 Route::middleware('auth:sanctum')->group(function () {
   Route::post('/logout', [AuthController::class, 'logout']);
 
-  Route::patch('/tickets/{id}/status', [TicketController::class, 'updateStatus']);
-  Route::post('/tickets/{id}/responses', [TicketController::class, 'storeResponse']);
+  Route::patch('/tickets/{ticket}/status', [TicketController::class, 'updateStatus']);
+  Route::post('/tickets/{ticket}/responses', [TicketController::class, 'storeResponse']);
 });
