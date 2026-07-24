@@ -15,6 +15,6 @@ Route::get('/tickets/{ticket}', [TicketController::class, 'show']);
 Route::middleware('auth:sanctum')->group(function () {
   Route::post('/logout', [AuthController::class, 'logout']);
 
-  Route::patch('/tickets/{id}/status', [TicketController::class, 'updateStatus']);
-  Route::post('/tickets/{id}/responses', [TicketController::class, 'storeResponse']);
+  Route::patch('/tickets/{ticket}/status', [TicketController::class, 'updateStatus']);
+  Route::post('/tickets/{ticket}/responses', [TicketController::class, 'storeResponse']);
 });

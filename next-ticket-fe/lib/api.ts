@@ -125,3 +125,7 @@ export function logout(token: string) {
     token,
   });
 }
+
+export function getMe(token: string) {
+  return apiFetch<{ user: AdminUser }>('/me', { token });
+}
